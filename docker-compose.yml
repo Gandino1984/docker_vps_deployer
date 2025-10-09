@@ -1,3 +1,4 @@
+
 services:
   nginx-proxy:
     image: jwilder/nginx-proxy
@@ -6,26 +7,27 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      - conf:/etc/nginx/conf.d
+      - vhost:/etc/nginx/vhost.d
+      - dhparam:/etc/nginx/dhparam
+      - certs:/etc/nginx/certs:ro
+      - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs:ro
-      - ./vhost.d:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
     networks:
       - proxy
     restart: always
 
-    letsencrypt:
-      image: jrcs/letsencrypt-nginx-proxy-companion
-      container_name: nginx-proxy-le
-      volumes_from:
-        - nginx-proxy
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock:ro
-        - ./certs:/etc/nginx/certs:rw
-        - ./vhost.d:/etc/nginx/vhost.d
-        - ./html:/usr/share/nginx/html
-        - acme:/etc/acme.sh
-      restart: always
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx-proxy-le
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
+      - html:/usr/share/nginx/html
+    restart: always
 
 volumes:
   conf:
@@ -39,4 +41,3 @@ networks:
   proxy:
     name: nginx-proxy
     external: true
-    
